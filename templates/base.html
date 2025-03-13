@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}RMHS Dashboard{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Custom CSS -->
+    {% block extra_css %}{% endblock %}
+    
+    <style>
+        :root {
+            --primary-color: #2d46b9;    /* Darker blue */
+            --secondary-color: #4a4f57;  /* Darker gray */
+            --success-color: #1a9c8b;    /* Darker teal */
+            --danger-color: #d32752;     /* Darker red */
+            --warning-color: #f7b801;    /* Darker yellow */
+            --info-color: #0f9ed8;       /* Darker light blue */
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+        }
+        
+        .sidebar {
+            min-height: 100vh;
+            background-color: #1a1c2a;   /* Darker blue-gray */
+            color: white;
+            padding-top: 20px;
+        }
+        
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 5px;
+            border-radius: 5px;
+            padding: 10px 15px;
+        }
+        
+        .sidebar .nav-link:hover {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.15);
+        }
+        
+        .sidebar .nav-link.active {
+            color: white;
+            background-color: var(--primary-color);
+        }
+        
+        .sidebar .nav-link i {
+            margin-right: 10px;
+        }
+        
+        .main-content {
+            padding: 20px;
+        }
+        
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+            margin-bottom: 20px;
+            border: none;
+        }
+        
+        .card-header {
+            font-weight: bold;
+            background-color: rgba(0, 0, 0, 0.05);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        
+        .dashboard-card {
+            transition: transform 0.3s;
+        }
+        
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .area-btn {
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            color: white;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .area-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .area-1 {
+            background: linear-gradient(135deg, #2d46b9, #1a2980);
+        }
+        
+        .area-2-3 {
+            background: linear-gradient(135deg, #1a9c8b, #0f6e5d);
+        }
+        
+        .delays {
+            background: linear-gradient(135deg, #d32752, #b21e3b);
+        }
+        
+        .rakes {
+            background: linear-gradient(135deg, #f7b801, #e59500);
+        }
+        
+        .maintenance {
+            background: linear-gradient(135deg, #0f9ed8, #0077b6);
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+        
+        .progress {
+            height: 12px;
+            border-radius: 6px;
+        }
+        
+        .badge {
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+        
+        .table th {
+            font-weight: 600;
+            background-color: rgba(0, 0, 0, 0.04);
+        }
+        
+        /* Report styling */
+        .operation-report {
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .operation-report h4 {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .operation-report .report-section {
+            margin-bottom: 15px;
+        }
+        
+        .operation-report .report-section h5 {
+            font-weight: 600;
+            color: var(--secondary-color);
+            margin-bottom: 10px;
+        }
+        
+        .operation-report .report-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        
+        .operation-report .report-item .item-name {
+            font-weight: 500;
+        }
+        
+        .operation-report .report-item .item-value {
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-2 sidebar d-none d-md-block">
+                <div class="text-center mb-4">
+                    <h4>RMHS Dashboard</h4>
+                </div>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="{% url 'dashboard' %}">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if '/operations/area1/' in request.path %}active{% endif %}" href="{% url 'operations:area1_list' %}">
+                            <i class="fas fa-industry"></i> Area-1 Operations
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if '/operations/area23/' in request.path %}active{% endif %}" href="{% url 'operations:area23_list' %}">
+                            <i class="fas fa-industry"></i> Area-2 & 3 Operations
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if '/delays/' in request.path %}active{% endif %}" href="{% url 'delays:list' %}">
+                            <i class="fas fa-exclamation-triangle"></i> Delays
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if '/rakes/' in request.path %}active{% endif %}" href="{% url 'rakes:list' %}">
+                            <i class="fas fa-train"></i> Rakes
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if '/maintenance/' in request.path %}active{% endif %}" href="{% url 'maintenance:list' %}">
+                            <i class="fas fa-tools"></i> Maintenance
+                        </a>
+                    </li>
+                    <li class="nav-item mt-5">
+                        {% if user.is_authenticated %}
+                            <a class="nav-link" href="{% url 'logout' %}">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </a>
+                        {% else %}
+                            <a class="nav-link" href="{% url 'login' %}">
+                                <i class="fas fa-sign-in-alt"></i> Login
+                            </a>
+                        {% endif %}
+                    </li>
+                </ul>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="col-md-10 ms-auto main-content">
+                <!-- Top Navigation for Mobile -->
+                <nav class="navbar navbar-expand-lg navbar-light bg-light d-md-none mb-4">
+                    <div class="container-fluid">
+                        <a class="navbar-brand" href="{% url 'dashboard' %}">RMHS Dashboard</a>
+                        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                            <span class="navbar-toggler-icon"></span>
+                        </button>
+                        <div class="collapse navbar-collapse" id="navbarNav">
+                            <ul class="navbar-nav">
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{% url 'operations:area1_list' %}">Area-1</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{% url 'operations:area23_list' %}">Area-2 & 3</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{% url 'delays:list' %}">Delays</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{% url 'rakes:list' %}">Rakes</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{% url 'maintenance:list' %}">Maintenance</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </nav>
+                
+                <!-- Page Header -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>{% block page_title %}Dashboard{% endblock %}</h2>
+                    <div>
+                        {% if user.is_authenticated %}
+                            <span class="me-3">Welcome, {{ user.username }}</span>
+                            <span class="badge bg-primary">
+                                {% if user.groups.all.0.name == 'Operations' %}
+                                    Operations Engineer
+                                {% elif user.groups.all.0.name == 'Maintenance' %}
+                                    Maintenance Engineer
+                                {% elif user.groups.all.0.name == 'Shift_Incharge' %}
+                                    Shift In-charge
+                                {% else %}
+                                    User
+                                {% endif %}
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Messages -->
+                {% if messages %}
+                    <div class="messages">
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                
+                <!-- Main Content Block -->
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html> 

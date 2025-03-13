@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+
+{% block title %}Delay Reports{% endblock %}
+
+{% block page_title %}Delay Reports{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Delay Reports</h5>
+                    <a href="{% url 'delays:create' %}" class="btn btn-light">
+                        <i class="fas fa-plus-circle"></i> Report New Delay
+                    </a>
+                </div>
+                <div class="card-body">
+                    <!-- Filters -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0">Filters</h6>
+                                </div>
+                                <div class="card-body">
+                                    <form method="get" class="row g-3">
+                                        <div class="col-md-3">
+                                            <label for="date" class="form-label">Date</label>
+                                            <input type="date" id="date" name="date" class="form-control" value="{{ selected_date|date:'Y-m-d' }}">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="shift" class="form-label">Shift</label>
+                                            <select id="shift" name="shift" class="form-select">
+                                                <option value="">All Shifts</option>
+                                                <option value="A" {% if selected_shift == 'A' %}selected{% endif %}>Shift A</option>
+                                                <option value="B" {% if selected_shift == 'B' %}selected{% endif %}>Shift B</option>
+                                                <option value="C" {% if selected_shift == 'C' %}selected{% endif %}>Shift C</option>
+                                                <option value="G" {% if selected_shift == 'G' %}selected{% endif %}>General Shift</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="type" class="form-label">Delay Type</label>
+                                            <select id="type" name="type" class="form-select">
+                                                <option value="">All Types</option>
+                                                <option value="MECHANICAL" {% if selected_type == 'MECHANICAL' %}selected{% endif %}>Mechanical</option>
+                                                <option value="ELECTRICAL" {% if selected_type == 'ELECTRICAL' %}selected{% endif %}>Electrical</option>
+                                                <option value="OPERATIONAL" {% if selected_type == 'OPERATIONAL' %}selected{% endif %}>Operational</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="area" class="form-label">Area</label>
+                                            <select id="area" name="area" class="form-select">
+                                                <option value="">All Areas</option>
+                                                <option value="AREA_1" {% if selected_area == 'AREA_1' %}selected{% endif %}>Area-1</option>
+                                                <option value="AREA_2" {% if selected_area == 'AREA_2' %}selected{% endif %}>Area-2</option>
+                                                <option value="AREA_3" {% if selected_area == 'AREA_3' %}selected{% endif %}>Area-3</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="resolved" class="form-label">Status</label>
+                                            <select id="resolved" name="resolved" class="form-select">
+                                                <option value="">All Statuses</option>
+                                                <option value="true" {% if selected_resolved == 'true' %}selected{% endif %}>Resolved</option>
+                                                <option value="false" {% if selected_resolved == 'false' %}selected{% endif %}>Unresolved</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-9 d-flex align-items-end">
+                                            <div>
+                                                <button type="submit" class="btn btn-primary me-2">
+                                                    <i class="fas fa-filter"></i> Apply Filters
+                                                </button>
+                                                <a href="{% url 'delays:list' %}" class="btn btn-outline-secondary">
+                                                    <i class="fas fa-undo"></i> Reset
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Delay Statistics -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card bg-light">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Delay Statistics</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-3 text-center">
+                                            <h5>Mechanical</h5>
+                                            <h3 class="text-danger">{{ mechanical_delays|floatformat:2 }} hrs</h3>
+                                            <div class="progress mt-2">
+                                                <div id="mechanical-progress" class="progress-bar bg-danger" role="progressbar">
+                                                    {{ mechanical_percentage|floatformat:1 }}%
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3 text-center">
+                                            <h5>Electrical</h5>
+                                            <h3 class="text-warning">{{ electrical_delays|floatformat:2 }} hrs</h3>
+                                            <div class="progress mt-2">
+                                                <div id="electrical-progress" class="progress-bar bg-warning" role="progressbar">
+                                                    {{ electrical_percentage|floatformat:1 }}%
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3 text-center">
+                                            <h5>Operational</h5>
+                                            <h3 class="text-info">{{ operational_delays|floatformat:2 }} hrs</h3>
+                                            <div class="progress mt-2">
+                                                <div id="operational-progress" class="progress-bar bg-info" role="progressbar">
+                                                    {{ operational_percentage|floatformat:1 }}%
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3 text-center">
+                                            <h5>Total Delays</h5>
+                                            <h3 class="text-primary">{{ total_delays|floatformat:2 }} hrs</h3>
+                                            <div class="progress mt-2">
+                                                <div class="progress-bar bg-primary" role="progressbar" style="width: 100%">
+                                                    100%
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Delays Table -->
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr class="bg-light">
+                                    <th>Date</th>
+                                    <th>Shift</th>
+                                    <th>Type</th>
+                                    <th>Area</th>
+                                    <th>Equipment</th>
+                                    <th>Duration (hrs)</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if delays %}
+                                    {% for delay in delays %}
+                                        <tr>
+                                            <td>{{ delay.date }}</td>
+                                            <td>{{ delay.get_shift_display }}</td>
+                                            <td>
+                                                {% if delay.delay_type == 'MECHANICAL' %}
+                                                    <span class="badge bg-danger">Mechanical</span>
+                                                {% elif delay.delay_type == 'ELECTRICAL' %}
+                                                    <span class="badge bg-warning text-dark">Electrical</span>
+                                                {% elif delay.delay_type == 'OPERATIONAL' %}
+                                                    <span class="badge bg-info">Operational</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ delay.get_area_display }}</td>
+                                            <td>{{ delay.get_equipment_display }} <small class="text-muted">({{ delay.equipment_id }})</small></td>
+                                            <td>{{ delay.duration_hours }}</td>
+                                            <td>
+                                                {% if delay.is_resolved %}
+                                                    <span class="badge bg-success">Resolved</span>
+                                                {% else %}
+                                                    <span class="badge bg-warning text-dark">Unresolved</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <a href="{% url 'delays:detail' delay.pk %}" class="btn btn-sm btn-info" title="View">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <a href="{% url 'delays:update' delay.pk %}" class="btn btn-sm btn-primary" title="Edit">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                {% if not delay.is_resolved %}
+                                                    <a href="{% url 'delays:resolve' delay.pk %}" class="btn btn-sm btn-success" title="Mark as Resolved">
+                                                        <i class="fas fa-check-circle"></i>
+                                                    </a>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="8" class="text-center">No delay reports found for the selected filters.</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Add Buttons -->
+                    <div class="row mt-4">
+                        <div class="col-12 text-center">
+                            <a href="{% url 'delays:create' %}" class="btn btn-success">
+                                <i class="fas fa-plus-circle"></i> Report New Delay
+                            </a>
+                            <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                                <i class="fas fa-tachometer-alt"></i> Back to Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+    
+    // Set progress bar widths after the page has loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set mechanical progress
+        var mechanicalProgress = document.getElementById('mechanical-progress');
+        if (mechanicalProgress) {
+            mechanicalProgress.style.width = "{{ mechanical_percentage|floatformat:1 }}%";
+        }
+        
+        // Set electrical progress
+        var electricalProgress = document.getElementById('electrical-progress');
+        if (electricalProgress) {
+            electricalProgress.style.width = "{{ electrical_percentage|floatformat:1 }}%";
+        }
+        
+        // Set operational progress
+        var operationalProgress = document.getElementById('operational-progress');
+        if (operationalProgress) {
+            operationalProgress.style.width = "{{ operational_percentage|floatformat:1 }}%";
+        }
+    });
+</script>
+{% endblock %} 

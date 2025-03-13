@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}Mark Delay as Resolved - {{ delay.equipment }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Mark Delay as Resolved</h5>
+                </div>
+                <div class="card-body">
+                    <h4 class="mb-4">Are you sure you want to mark this delay as resolved?</h4>
+                    
+                    <div class="alert alert-info">
+                        <p class="mb-0"><strong>Note:</strong> This will set the resolution time to the current time and update the status to "Resolved".</p>
+                    </div>
+                    
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Delay Details</h5>
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Equipment:</span>
+                                    <strong>{{ delay.get_equipment_display }} ({{ delay.equipment_id }})</strong>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Type:</span>
+                                    <strong>{{ delay.get_delay_type_display }}</strong>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Area:</span>
+                                    <strong>{{ delay.get_area_display }}</strong>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Duration:</span>
+                                    <strong>{{ delay.duration_hours }} hours</strong>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Current Time:</span>
+                                    <strong id="currentTime"></strong>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'delays:detail' delay.pk %}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-success">Confirm Resolution</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Update current time every second
+    function updateCurrentTime() {
+        const now = new Date();
+        document.getElementById('currentTime').textContent = now.toLocaleString();
+    }
+    
+    // Initial update and set interval
+    updateCurrentTime();
+    setInterval(updateCurrentTime, 1000);
+</script>
+{% endblock %} 

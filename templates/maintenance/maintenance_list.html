@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block title %}Maintenance Activities{% endblock %}
+
+{% block page_title %}Maintenance Activities{% endblock %}
+
+{% block content %}
+<div class="container-fluid my-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Maintenance Activities</h5>
+                    <div>
+                        <a href="{% url 'maintenance:create_plan' %}" class="btn btn-light btn-sm me-2">
+                            <i class="bi bi-plus-circle"></i> New Plan
+                        </a>
+                        <a href="{% url 'maintenance:create_execution' %}" class="btn btn-success btn-sm">
+                            <i class="bi bi-check-circle"></i> New Execution
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form method="get" class="row g-3 mb-4">
+                        <div class="col-md-2">
+                            <label for="date" class="form-label">Date</label>
+                            <input type="date" class="form-control" id="date" name="date" value="{{ selected_date|date:'Y-m-d' }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="type" class="form-label">Type</label>
+                            <select class="form-select" id="type" name="type">
+                                <option value="">All Types</option>
+                                <option value="MECHANICAL" {% if selected_type == 'MECHANICAL' %}selected{% endif %}>Mechanical</option>
+                                <option value="ELECTRICAL" {% if selected_type == 'ELECTRICAL' %}selected{% endif %}>Electrical</option>
+                                <option value="OPERATION" {% if selected_type == 'OPERATION' %}selected{% endif %}>Operation</option>
+                                <option value="CIVIL" {% if selected_type == 'CIVIL' %}selected{% endif %}>Civil</option>
+                                <option value="OTHER" {% if selected_type == 'OTHER' %}selected{% endif %}>Other</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="category" class="form-label">Category</label>
+                            <select class="form-select" id="category" name="category">
+                                <option value="">All Categories</option>
+                                <option value="PREVENTIVE" {% if selected_category == 'PREVENTIVE' %}selected{% endif %}>Preventive</option>
+                                <option value="BREAKDOWN" {% if selected_category == 'BREAKDOWN' %}selected{% endif %}>Breakdown</option>
+                                <option value="CORRECTIVE" {% if selected_category == 'CORRECTIVE' %}selected{% endif %}>Corrective</option>
+                                <option value="PREDICTIVE" {% if selected_category == 'PREDICTIVE' %}selected{% endif %}>Predictive</option>
+                                <option value="ROUTINE" {% if selected_category == 'ROUTINE' %}selected{% endif %}>Routine</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="activity_type" class="form-label">Activity Type</label>
+                            <select class="form-select" id="activity_type" name="activity_type">
+                                <option value="">All Activities</option>
+                                <option value="PLANNED" {% if selected_activity_type == 'PLANNED' %}selected{% endif %}>Planning</option>
+                                <option value="EXECUTION" {% if selected_activity_type == 'EXECUTION' %}selected{% endif %}>Execution</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">Filter</button>
+                        </div>
+                    </form>
+                    
+                    <div class="mb-4">
+                        <h5 class="mb-3">Maintenance Plans <span class="badge bg-primary rounded-pill">{{ planning_activities|length }}</span></h5>
+                        {% if planning_activities %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Shift</th>
+                                        <th>Type</th>
+                                        <th>Equipment</th>
+                                        <th>Description</th>
+                                        <th>Priority</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for activity in planning_activities %}
+                                    <tr>
+                                        <td>{{ activity.date }}</td>
+                                        <td>{{ activity.get_shift_display }}</td>
+                                        <td>{{ activity.get_maintenance_type_display }}</td>
+                                        <td>{{ activity.get_equipment_display }} - {{ activity.equipment_id }}</td>
+                                        <td>{{ activity.activity_description|truncatechars:50 }}</td>
+                                        <td>
+                                            <span class="badge {% if activity.priority == 'HIGH' %}bg-danger{% elif activity.priority == 'MEDIUM' %}bg-warning{% else %}bg-info{% endif %}">
+                                                {{ activity.get_priority_display }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% if activity.is_completed %}
+                                            <span class="badge bg-success">Completed</span>
+                                            {% else %}
+                                            <span class="badge bg-warning">Pending</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <a href="{% url 'maintenance:detail' activity.pk %}" class="btn btn-outline-primary">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                <a href="{% url 'maintenance:update' activity.pk %}" class="btn btn-outline-secondary">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                {% if not activity.is_completed %}
+                                                <a href="{% url 'maintenance:create_execution_from_plan' activity.pk %}" class="btn btn-outline-success" title="Create Execution Report">
+                                                    <i class="bi bi-check-circle"></i>
+                                                </a>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-light">
+                            No maintenance plans found for the selected filters.
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <h5 class="mb-3">Execution Reports <span class="badge bg-success rounded-pill">{{ execution_activities|length }}</span></h5>
+                        {% if execution_activities %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Shift</th>
+                                        <th>Type</th>
+                                        <th>Equipment</th>
+                                        <th>Execution</th>
+                                        <th>Pending Work</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for activity in execution_activities %}
+                                    <tr>
+                                        <td>{{ activity.date }}</td>
+                                        <td>{{ activity.get_shift_display }}</td>
+                                        <td>{{ activity.get_maintenance_type_display }}</td>
+                                        <td>{{ activity.get_equipment_display }} - {{ activity.equipment_id }}</td>
+                                        <td>{{ activity.execution_description|truncatechars:50 }}</td>
+                                        <td>{{ activity.pending_work|default:"None"|truncatechars:30 }}</td>
+                                        <td>
+                                            {% if activity.is_completed %}
+                                            <span class="badge bg-success">Completed</span>
+                                            {% else %}
+                                            <span class="badge bg-warning">Pending</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <a href="{% url 'maintenance:detail' activity.pk %}" class="btn btn-outline-primary">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                <a href="{% url 'maintenance:update' activity.pk %}" class="btn btn-outline-secondary">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-light">
+                            No execution reports found for the selected filters.
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

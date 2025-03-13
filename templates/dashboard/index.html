@@ -1,0 +1,719 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - RMHS Dashboard{% endblock %}
+
+{% block page_title %}Main Dashboard{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Date Filter</h5>
+                </div>
+            </div>
+            <div class="card-body">
+                <form method="get" class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label for="date" class="form-label">Select Date</label>
+                        <input type="date" class="form-control" id="date" name="date" value="{{ selected_date|date:'Y-m-d' }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="shift" class="form-label">Select Shift</label>
+                        <select class="form-select" id="shift" name="shift">
+                            <option value="">All Shifts</option>
+                            <option value="A" {% if selected_shift == 'A' %}selected{% endif %}>Shift A (6:00 AM - 2:00 PM)</option>
+                            <option value="B" {% if selected_shift == 'B' %}selected{% endif %}>Shift B (2:00 PM - 10:00 PM)</option>
+                            <option value="C" {% if selected_shift == 'C' %}selected{% endif %}>Shift C (10:00 PM - 6:00 AM)</option>
+                            <option value="G" {% if selected_shift == 'G' %}selected{% endif %}>General Shift (9:00 AM - 6:30 PM)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-primary w-100">Apply Filter</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Navigation Buttons -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <a href="{% url 'operations:area1_list' %}" class="area-btn area-1 d-block text-decoration-none">
+            <i class="fas fa-industry fa-3x mb-3"></i>
+            <h4>Area-1 Operations</h4>
+            <p class="mb-0">Reclaiming, Feeding to BF/SMS, Receiving from BF</p>
+            <div class="mt-3">
+                <a href="{% url 'operations:area1_create' %}" class="btn btn-sm btn-success">
+                    <i class="fas fa-plus-circle"></i> Add New Entry
+                </a>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a href="{% url 'operations:area23_list' %}" class="area-btn area-2-3 d-block text-decoration-none">
+            <i class="fas fa-industry fa-3x mb-3"></i>
+            <h4>Area-2 & 3 Operations</h4>
+            <p class="mb-0">Feeding, Receiving, Crushing, Base Mix Handling</p>
+            <div class="mt-3">
+                <a href="{% url 'operations:area23_create' %}" class="btn btn-sm btn-success">
+                    <i class="fas fa-plus-circle"></i> Add New Entry
+                </a>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a href="{% url 'delays:list' %}" class="area-btn delays d-block text-decoration-none">
+            <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+            <h4>Delay Reports</h4>
+            <p class="mb-0">Mechanical, Electrical, Operational Delays</p>
+            <div class="mt-3">
+                <a href="{% url 'delays:create' %}" class="btn btn-sm btn-success">
+                    <i class="fas fa-plus-circle"></i> Report Delay
+                </a>
+            </div>
+        </a>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <a href="{% url 'rakes:list' %}" class="area-btn rakes d-block text-decoration-none">
+            <i class="fas fa-train fa-3x mb-3"></i>
+            <h4>Rake Completion Reports</h4>
+            <p class="mb-0">Material & Numbers of Rakes</p>
+            <div class="mt-3">
+                <a href="{% url 'rakes:create' %}" class="btn btn-sm btn-success">
+                    <i class="fas fa-plus-circle"></i> Add Rake
+                </a>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-6">
+        <a href="{% url 'maintenance:list' %}" class="area-btn maintenance d-block text-decoration-none">
+            <i class="fas fa-tools fa-3x mb-3"></i>
+            <h4>Maintenance Activities</h4>
+            <p class="mb-0">Mechanical/Electrical Maintenance, Spares</p>
+            <div class="mt-3">
+                <a href="{% url 'maintenance:create_plan' %}" class="btn btn-sm btn-success me-2">
+                    <i class="fas fa-plus-circle"></i> New Plan
+                </a>
+                <a href="{% url 'maintenance:create_execution' %}" class="btn btn-sm btn-warning">
+                    <i class="fas fa-clipboard-check"></i> New Execution
+                </a>
+            </div>
+        </a>
+    </div>
+</div>
+
+<!-- Charts Section -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Material Handling Summary (MT)</h5>
+            </div>
+            <div class="card-body">
+                <!-- Material Type Filter Buttons -->
+                <div class="mb-3">
+                    <h6 class="mb-2">Filter by Material Type:</h6>
+                    <div class="d-flex flex-wrap">
+                        <button class="btn btn-sm me-2 mb-2 material-filter active" data-material="all" style="background-color: #4a4f57; color: white;">All Materials</button>
+                        <button class="btn btn-sm me-2 mb-2 material-filter" data-material="base_mix" style="background-color: #2d46b9; color: white;">Base Mix</button>
+                        <button class="btn btn-sm me-2 mb-2 material-filter" data-material="coke" style="background-color: #1a9c8b; color: white;">Coke</button>
+                        <button class="btn btn-sm me-2 mb-2 material-filter" data-material="coal" style="background-color: #333333; color: white;">Coal</button>
+                        <button class="btn btn-sm me-2 mb-2 material-filter" data-material="sinter" style="background-color: #d32752; color: white;">Sinter</button>
+                        <button class="btn btn-sm me-2 mb-2 material-filter" data-material="limestone" style="background-color: #f7b801; color: white;">Limestone</button>
+                        <button class="btn btn-sm me-2 mb-2 material-filter" data-material="iron_ore" style="background-color: #8B4513; color: white;">Iron Ore</button>
+                        <button class="btn btn-sm me-2 mb-2 material-filter" data-material="dolomite" style="background-color: #0f9ed8; color: white;">Dolomite</button>
+                    </div>
+                </div>
+                
+                <div class="chart-container" style="height: 300px;">
+                    <canvas id="materialChart"></canvas>
+                </div>
+                
+                <!-- Legend for Operations -->
+                <div class="mt-3">
+                    <div class="d-flex flex-wrap justify-content-center">
+                        <div class="d-flex align-items-center me-3 mb-2">
+                            <div style="width: 15px; height: 15px; background-color: rgba(45, 70, 185, 0.8); margin-right: 5px;"></div>
+                            <span>Feeding</span>
+                        </div>
+                        <div class="d-flex align-items-center me-3 mb-2">
+                            <div style="width: 15px; height: 15px; background-color: rgba(26, 156, 139, 0.8); margin-right: 5px;"></div>
+                            <span>Receiving</span>
+                        </div>
+                        <div class="d-flex align-items-center me-3 mb-2">
+                            <div style="width: 15px; height: 15px; background-color: rgba(247, 184, 1, 0.8); margin-right: 5px;"></div>
+                            <span>Crushing</span>
+                        </div>
+                        <div class="d-flex align-items-center mb-2">
+                            <div style="width: 15px; height: 15px; background-color: rgba(211, 39, 82, 0.8); margin-right: 5px;"></div>
+                            <span>Reclaiming</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Delay Summary (Hours)</h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container" style="height: 300px;">
+                    <canvas id="delayChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Additional Charts -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Performance vs Target (MT)</h5>
+            </div>
+            <div class="card-body">
+                <!-- Material Type Filter Buttons -->
+                <div class="mb-3">
+                    <h6 class="mb-2">Filter by Material Type:</h6>
+                    <div class="d-flex flex-wrap">
+                        <button class="btn btn-sm me-2 mb-2 target-material-filter active" data-material="all" style="background-color: #4a4f57; color: white;">All Materials</button>
+                        <button class="btn btn-sm me-2 mb-2 target-material-filter" data-material="base_mix" style="background-color: #2d46b9; color: white;">Base Mix</button>
+                        <button class="btn btn-sm me-2 mb-2 target-material-filter" data-material="coke" style="background-color: #1a9c8b; color: white;">Coke</button>
+                        <button class="btn btn-sm me-2 mb-2 target-material-filter" data-material="coal" style="background-color: #333333; color: white;">Coal</button>
+                        <button class="btn btn-sm me-2 mb-2 target-material-filter" data-material="sinter" style="background-color: #d32752; color: white;">Sinter</button>
+                        <button class="btn btn-sm me-2 mb-2 target-material-filter" data-material="limestone" style="background-color: #f7b801; color: white;">Limestone</button>
+                        <button class="btn btn-sm me-2 mb-2 target-material-filter" data-material="iron_ore" style="background-color: #8B4513; color: white;">Iron Ore</button>
+                        <button class="btn btn-sm me-2 mb-2 target-material-filter" data-material="dolomite" style="background-color: #0f9ed8; color: white;">Dolomite</button>
+                    </div>
+                </div>
+                
+                <div class="chart-container" style="height: 300px;">
+                    <canvas id="targetComparisonChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Sections -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Operational Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Activity</th>
+                                <th>Quantity (MT)</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Total Feeding</td>
+                                <td>{{ total_feeding|default:"0" }}</td>
+                                <td>
+                                    {% if total_feeding > target_feeding %}
+                                        <span class="badge bg-success">Above Target</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">Below Target</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Total Receiving</td>
+                                <td>{{ total_receiving|default:"0" }}</td>
+                                <td>
+                                    {% if total_receiving > target_receiving %}
+                                        <span class="badge bg-success">Above Target</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">Below Target</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Total Crushing</td>
+                                <td>{{ total_crushing|default:"0" }}</td>
+                                <td>
+                                    {% if total_crushing > target_crushing %}
+                                        <span class="badge bg-success">Above Target</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">Below Target</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Total Reclaiming</td>
+                                <td>{{ total_reclaiming|default:"0" }}</td>
+                                <td>
+                                    {% if total_reclaiming > target_reclaiming %}
+                                        <span class="badge bg-success">Above Target</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">Below Target</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Rake & Maintenance Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-4">
+                    <h6 class="fw-bold">Rakes Completed Today</h6>
+                    <p>Total Rakes: {{ total_rakes|default:"0" }}</p>
+                    <div class="progress mb-2">
+                        <div class="progress-bar bg-warning" role="progressbar" style="width: {{ rake_percentage|default:'0' }}%" aria-valuenow="{{ rake_percentage|default:'0' }}" aria-valuemin="0" aria-valuemax="100">{{ rake_percentage|default:'0' }}%</div>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <h6 class="fw-bold">Delays Today</h6>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Mechanical Delays:</span>
+                        <span>{{ mechanical_delays|default:"0" }} hrs</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Electrical Delays:</span>
+                        <span>{{ electrical_delays|default:"0" }} hrs</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Operational Delays:</span>
+                        <span>{{ operational_delays|default:"0" }} hrs</span>
+                    </div>
+                </div>
+                
+                <div>
+                    <h6 class="fw-bold">Maintenance Activities</h6>
+                    <p>{{ maintenance_count|default:"0" }} maintenance activities recorded today</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Material data by type
+    const materialData = {
+        all: {
+            feeding: {{ total_feeding|default:"0" }},
+            receiving: {{ total_receiving|default:"0" }},
+            crushing: {{ total_crushing|default:"0" }},
+            reclaiming: {{ total_reclaiming|default:"0" }}
+        },
+        base_mix: {
+            feeding: {{ base_mix_feeding|default:"0" }},
+            receiving: {{ base_mix_receiving|default:"0" }},
+            crushing: {{ base_mix_crushing|default:"0" }},
+            reclaiming: {{ base_mix_reclaiming|default:"0" }}
+        },
+        coke: {
+            feeding: {{ coke_feeding|default:"0" }},
+            receiving: {{ coke_receiving|default:"0" }},
+            crushing: {{ coke_crushing|default:"0" }},
+            reclaiming: {{ coke_reclaiming|default:"0" }}
+        },
+        coal: {
+            feeding: {{ coal_feeding|default:"0" }},
+            receiving: {{ coal_receiving|default:"0" }},
+            crushing: {{ coal_crushing|default:"0" }},
+            reclaiming: {{ coal_reclaiming|default:"0" }}
+        },
+        sinter: {
+            feeding: {{ sinter_feeding|default:"0" }},
+            receiving: {{ sinter_receiving|default:"0" }},
+            crushing: {{ sinter_crushing|default:"0" }},
+            reclaiming: {{ sinter_reclaiming|default:"0" }}
+        },
+        limestone: {
+            feeding: {{ limestone_feeding|default:"0" }},
+            receiving: {{ limestone_receiving|default:"0" }},
+            crushing: {{ limestone_crushing|default:"0" }},
+            reclaiming: {{ limestone_reclaiming|default:"0" }}
+        },
+        iron_ore: {
+            feeding: {{ iron_ore_feeding|default:"0" }},
+            receiving: {{ iron_ore_receiving|default:"0" }},
+            crushing: {{ iron_ore_crushing|default:"0" }},
+            reclaiming: {{ iron_ore_reclaiming|default:"0" }}
+        },
+        dolomite: {
+            feeding: {{ dolomite_feeding|default:"0" }},
+            receiving: {{ dolomite_receiving|default:"0" }},
+            crushing: {{ dolomite_crushing|default:"0" }},
+            reclaiming: {{ dolomite_reclaiming|default:"0" }}
+        }
+    };
+
+    // For demo purposes, if data is not available, generate random data
+    Object.keys(materialData).forEach(material => {
+        if (material !== 'all') {
+            if (materialData[material].feeding === 0) materialData[material].feeding = Math.floor(Math.random() * 1000) + 200;
+            if (materialData[material].receiving === 0) materialData[material].receiving = Math.floor(Math.random() * 800) + 100;
+            if (materialData[material].crushing === 0) materialData[material].crushing = Math.floor(Math.random() * 600) + 100;
+            if (materialData[material].reclaiming === 0) materialData[material].reclaiming = Math.floor(Math.random() * 700) + 100;
+        }
+    });
+
+    // Define target values for each material
+    const materialTargets = {
+        all: {
+            feeding: {{ target_feeding|default:"0" }},
+            receiving: {{ target_receiving|default:"0" }},
+            crushing: {{ target_crushing|default:"0" }},
+            reclaiming: {{ target_reclaiming|default:"0" }}
+        },
+        base_mix: {
+            feeding: {{ target_feeding|default:"0" }} * 0.25,  // Example targets proportional to material contribution
+            receiving: {{ target_receiving|default:"0" }} * 0.25,
+            crushing: {{ target_crushing|default:"0" }} * 0.25,
+            reclaiming: {{ target_reclaiming|default:"0" }} * 0.25
+        },
+        coke: {
+            feeding: {{ target_feeding|default:"0" }} * 0.15,
+            receiving: {{ target_receiving|default:"0" }} * 0.15,
+            crushing: {{ target_crushing|default:"0" }} * 0.15,
+            reclaiming: {{ target_reclaiming|default:"0" }} * 0.15
+        },
+        coal: {
+            feeding: {{ target_feeding|default:"0" }} * 0.2,
+            receiving: {{ target_receiving|default:"0" }} * 0.2,
+            crushing: {{ target_crushing|default:"0" }} * 0.2,
+            reclaiming: {{ target_reclaiming|default:"0" }} * 0.2
+        },
+        sinter: {
+            feeding: {{ target_feeding|default:"0" }} * 0.1,
+            receiving: {{ target_receiving|default:"0" }} * 0.1,
+            crushing: {{ target_crushing|default:"0" }} * 0.1,
+            reclaiming: {{ target_reclaiming|default:"0" }} * 0.1
+        },
+        limestone: {
+            feeding: {{ target_feeding|default:"0" }} * 0.1,
+            receiving: {{ target_receiving|default:"0" }} * 0.1,
+            crushing: {{ target_crushing|default:"0" }} * 0.1,
+            reclaiming: {{ target_reclaiming|default:"0" }} * 0.1
+        },
+        iron_ore: {
+            feeding: {{ target_feeding|default:"0" }} * 0.15,
+            receiving: {{ target_receiving|default:"0" }} * 0.15,
+            crushing: {{ target_crushing|default:"0" }} * 0.15,
+            reclaiming: {{ target_reclaiming|default:"0" }} * 0.15
+        },
+        dolomite: {
+            feeding: {{ target_feeding|default:"0" }} * 0.05,
+            receiving: {{ target_receiving|default:"0" }} * 0.05,
+            crushing: {{ target_crushing|default:"0" }} * 0.05,
+            reclaiming: {{ target_reclaiming|default:"0" }} * 0.05
+        }
+    };
+
+    // Material Handling Chart
+    const materialCtx = document.getElementById('materialChart').getContext('2d');
+    let materialChart = null;
+
+    function createMaterialChart(materialType = 'all') {
+        if (materialChart) {
+            materialChart.destroy();
+        }
+
+        const data = materialData[materialType];
+        const materialTitle = materialType.charAt(0).toUpperCase() + materialType.slice(1).replace('_', ' ');
+
+        materialChart = new Chart(materialCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Feeding', 'Receiving', 'Crushing', 'Reclaiming'],
+                datasets: [{
+                    label: materialType === 'all' ? 'All Materials (MT)' : `${materialTitle} (MT)`,
+                    data: [data.feeding, data.receiving, data.crushing, data.reclaiming],
+                    backgroundColor: [
+                        'rgba(45, 70, 185, 0.8)',  // Feeding - Darker blue
+                        'rgba(26, 156, 139, 0.8)', // Receiving - Darker teal
+                        'rgba(247, 184, 1, 0.8)',  // Crushing - Darker yellow
+                        'rgba(211, 39, 82, 0.8)'   // Reclaiming - Darker red
+                    ],
+                    borderColor: [
+                        'rgba(45, 70, 185, 1)',
+                        'rgba(26, 156, 139, 1)',
+                        'rgba(247, 184, 1, 1)',
+                        'rgba(211, 39, 82, 1)'
+                    ],
+                    borderWidth: 2,
+                    borderRadius: 6,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            font: {
+                                weight: 'bold'
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label = label.split(' ')[0] + ' ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += context.parsed.y + ' MT';
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Quantity (Metric Tons)',
+                            font: {
+                                weight: 'bold'
+                            }
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Operations',
+                            font: {
+                                weight: 'bold'
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Initialize material chart with all materials
+    createMaterialChart();
+
+    // Add event listeners to material filter buttons
+    document.querySelectorAll('.material-filter').forEach(button => {
+        button.addEventListener('click', function() {
+            // Remove active class from all buttons
+            document.querySelectorAll('.material-filter').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Add active class to clicked button
+            this.classList.add('active');
+            
+            // Update chart with selected material
+            const material = this.getAttribute('data-material');
+            createMaterialChart(material);
+        });
+    });
+
+    // Delay Chart - Enhanced with better colors and labels
+    const delayCtx = document.getElementById('delayChart').getContext('2d');
+    const delayChart = new Chart(delayCtx, {
+        type: 'pie',
+        data: {
+            labels: ['Mechanical', 'Electrical', 'Operational'],
+            datasets: [{
+                data: [
+                    {{ mechanical_delays|default:"0" }}, 
+                    {{ electrical_delays|default:"0" }}, 
+                    {{ operational_delays|default:"0" }}
+                ],
+                backgroundColor: [
+                    'rgba(211, 39, 82, 0.8)',   // Mechanical - Darker red
+                    'rgba(15, 158, 216, 0.8)',  // Electrical - Darker blue
+                    'rgba(247, 184, 1, 0.8)'    // Operational - Darker yellow
+                ],
+                borderColor: [
+                    'rgba(211, 39, 82, 1)',
+                    'rgba(15, 158, 216, 1)',
+                    'rgba(247, 184, 1, 1)'
+                ],
+                borderWidth: 2,
+                hoverOffset: 15
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        font: {
+                            weight: 'bold'
+                        }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed !== null) {
+                                label += context.parsed + ' hours';
+                            }
+                            return label;
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Target Comparison Chart
+    const targetCtx = document.getElementById('targetComparisonChart').getContext('2d');
+    let targetChart = null;
+
+    function createTargetChart(materialType = 'all') {
+        if (targetChart) {
+            targetChart.destroy();
+        }
+        
+        const data = materialData[materialType];
+        const targets = materialTargets[materialType];
+        const materialTitle = materialType.charAt(0).toUpperCase() + materialType.slice(1).replace('_', ' ');
+        
+        targetChart = new Chart(targetCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Feeding', 'Receiving', 'Crushing', 'Reclaiming'],
+                datasets: [
+                    {
+                        label: materialType === 'all' ? 'Actual' : `${materialTitle} Actual`,
+                        data: [data.feeding, data.receiving, data.crushing, data.reclaiming],
+                        backgroundColor: 'rgba(26, 156, 139, 0.8)',
+                        borderColor: 'rgba(26, 156, 139, 1)',
+                        borderWidth: 2,
+                        borderRadius: 6
+                    },
+                    {
+                        label: materialType === 'all' ? 'Target' : `${materialTitle} Target`,
+                        data: [targets.feeding, targets.receiving, targets.crushing, targets.reclaiming],
+                        backgroundColor: 'rgba(211, 39, 82, 0.4)',
+                        borderColor: 'rgba(211, 39, 82, 1)',
+                        borderWidth: 2,
+                        borderRadius: 6,
+                        borderDash: [5, 5]
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: materialType === 'all' ? 'All Materials Performance' : `${materialTitle} Performance`,
+                        font: {
+                            size: 16,
+                            weight: 'bold'
+                        }
+                    },
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += context.parsed.y + ' MT';
+                                }
+                                return label;
+                            },
+                            afterLabel: function(context) {
+                                if (context.datasetIndex === 0) { // Only for actual values
+                                    const actualValue = context.parsed.y;
+                                    const targetValue = context.chart.data.datasets[1].data[context.dataIndex];
+                                    const percentage = (actualValue / targetValue * 100).toFixed(1);
+                                    return `Achievement: ${percentage}%`;
+                                }
+                                return null;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Quantity (MT)',
+                            font: {
+                                weight: 'bold'
+                            }
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Operations',
+                            font: {
+                                weight: 'bold'
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Initialize target chart with all materials
+    createTargetChart();
+
+    // Add event listeners to target material filter buttons
+    document.querySelectorAll('.target-material-filter').forEach(button => {
+        button.addEventListener('click', function() {
+            // Remove active class from all buttons
+            document.querySelectorAll('.target-material-filter').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Add active class to clicked button
+            this.classList.add('active');
+            
+            // Update chart with selected material
+            const material = this.getAttribute('data-material');
+            createTargetChart(material);
+        });
+    });
+</script>
+{% endblock %} 

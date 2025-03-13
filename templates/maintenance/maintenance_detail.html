@@ -1,0 +1,263 @@
+{% extends 'base.html' %}
+
+{% block title %}Maintenance Details{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="row">
+        <div class="col-12 col-lg-8 mx-auto">
+            <div class="card shadow">
+                <div class="card-header {% if activity.activity_type == 'PLANNED' %}bg-primary{% else %}bg-success{% endif %} text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        {% if activity.activity_type == 'PLANNED' %}
+                            Maintenance Plan Details
+                        {% else %}
+                            Execution Report Details
+                        {% endif %}
+                    </h5>
+                    <div>
+                        <a href="{% url 'maintenance:list' %}" class="btn btn-light btn-sm">
+                            <i class="bi bi-arrow-left"></i> Back to List
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-2">Basic Information</h6>
+                            <table class="table table-sm">
+                                <tr>
+                                    <th style="width: 40%">Date:</th>
+                                    <td>{{ activity.date }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Shift:</th>
+                                    <td>General Shift</td>
+                                </tr>
+                                <tr>
+                                    <th>Type:</th>
+                                    <td>{{ activity.get_maintenance_type_display }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Category:</th>
+                                    <td>{{ activity.get_maintenance_category_display }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-2">Equipment & Location</h6>
+                            <table class="table table-sm">
+                                <tr>
+                                    <th style="width: 40%">Area:</th>
+                                    <td>{{ activity.get_area_display }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Equipment:</th>
+                                    <td>{{ activity.get_equipment_display }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Equipment ID:</th>
+                                    <td>{{ activity.equipment_id }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Priority:</th>
+                                    <td>
+                                        <span class="badge {% if activity.priority == 'HIGH' %}bg-danger{% elif activity.priority == 'MEDIUM' %}bg-warning{% else %}bg-info{% endif %}">
+                                            {{ activity.get_priority_display }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-2">Time Details</h6>
+                            <table class="table table-sm">
+                                <tr>
+                                    <th style="width: 40%">Start Time:</th>
+                                    <td>{{ activity.start_time }}</td>
+                                </tr>
+                                <tr>
+                                    <th>End Time:</th>
+                                    <td>{{ activity.end_time }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Duration:</th>
+                                    <td>{{ activity.duration_hours }} hours</td>
+                                </tr>
+                            </table>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-2">Status</h6>
+                            <table class="table table-sm">
+                                <tr>
+                                    <th style="width: 40%">Status:</th>
+                                    <td>
+                                        {% if activity.is_completed %}
+                                        <span class="badge bg-success">Completed</span>
+                                        {% else %}
+                                        <span class="badge bg-warning">Pending</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% if activity.is_completed and activity.completion_time %}
+                                <tr>
+                                    <th>Completed on:</th>
+                                    <td>{{ activity.completion_time }}</td>
+                                </tr>
+                                {% endif %}
+                                <tr>
+                                    <th>Created by:</th>
+                                    <td>{{ activity.created_by.get_full_name|default:activity.created_by.username }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Created at:</th>
+                                    <td>{{ activity.created_at }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    {% if activity.activity_type == 'PLANNED' %}
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0">Planning Details</h6>
+                                </div>
+                                <div class="card-body">
+                                    <h6 class="text-muted">Activity Description</h6>
+                                    <p class="mb-4">{{ activity.activity_description|linebreaks }}</p>
+                                    
+                                    {% if activity.spares_required %}
+                                    <h6 class="text-muted">Spares Required</h6>
+                                    <p>{{ activity.spares_required|linebreaks }}</p>
+                                    {% endif %}
+                                    
+                                    {% if activity.remarks %}
+                                    <h6 class="text-muted">Remarks</h6>
+                                    <p class="mb-0">{{ activity.remarks|linebreaks }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if not activity.is_completed and not related_activities %}
+                    <div class="mb-4 text-center">
+                        <a href="{% url 'maintenance:create_execution_from_plan' activity.pk %}" class="btn btn-success">
+                            <i class="bi bi-check-circle"></i> Create Execution Report
+                        </a>
+                    </div>
+                    {% endif %}
+                    
+                    {% if related_activities %}
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header bg-success text-white">
+                                    <h6 class="mb-0">Execution Reports ({{ related_activities|length }})</h6>
+                                </div>
+                                <div class="card-body">
+                                    {% for execution in related_activities %}
+                                    <div class="border-bottom mb-3 pb-3">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <h6>Report from {{ execution.date }} - {{ execution.get_shift_display }}</h6>
+                                            <a href="{% url 'maintenance:detail' execution.pk %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-eye"></i> View Details
+                                            </a>
+                                        </div>
+                                        <p class="mb-2"><strong>Work Executed:</strong> {{ execution.execution_description|truncatechars:150 }}</p>
+                                        <div class="d-flex justify-content-between text-muted small">
+                                            <span>Status: 
+                                                {% if execution.is_completed %}
+                                                <span class="badge bg-success">Completed</span>
+                                                {% else %}
+                                                <span class="badge bg-warning">Pending</span>
+                                                {% endif %}
+                                            </span>
+                                            <span>Created by: {{ execution.created_by.get_full_name|default:execution.created_by.username }}</span>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% else %}
+                    <!-- Execution activity details -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header bg-success bg-opacity-25">
+                                    <h6 class="mb-0">Execution Details</h6>
+                                </div>
+                                <div class="card-body">
+                                    <h6 class="text-muted">Work Executed</h6>
+                                    <p class="mb-4">{{ activity.execution_description|linebreaks }}</p>
+                                    
+                                    {% if activity.spares_used %}
+                                    <h6 class="text-muted">Spares Used</h6>
+                                    <p class="mb-4">{{ activity.spares_used|linebreaks }}</p>
+                                    {% endif %}
+                                    
+                                    {% if activity.pending_work %}
+                                    <h6 class="text-muted">Pending Work</h6>
+                                    <p class="mb-4">{{ activity.pending_work|linebreaks }}</p>
+                                    {% endif %}
+                                    
+                                    {% if activity.remarks %}
+                                    <h6 class="text-muted">Remarks</h6>
+                                    <p class="mb-0">{{ activity.remarks|linebreaks }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if activity.related_activity %}
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header bg-primary text-white">
+                                    <h6 class="mb-0">Based on Maintenance Plan</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h6>Plan from {{ activity.related_activity.date }} - {{ activity.related_activity.get_shift_display }}</h6>
+                                        <a href="{% url 'maintenance:detail' activity.related_activity.pk %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i> View Plan
+                                        </a>
+                                    </div>
+                                    <p class="mb-2"><strong>Planned Work:</strong> {{ activity.related_activity.activity_description|truncatechars:150 }}</p>
+                                    {% if activity.related_activity.spares_required %}
+                                    <p class="mb-2"><strong>Spares Required in Plan:</strong> {{ activity.related_activity.spares_required|truncatechars:150 }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endif %}
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <a href="{% url 'maintenance:update' activity.pk %}" class="btn btn-primary me-md-2">
+                            <i class="bi bi-pencil"></i> Edit
+                        </a>
+                        <a href="{% url 'maintenance:delete' activity.pk %}" class="btn btn-danger">
+                            <i class="bi bi-trash"></i> Delete
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Maintenance Plan{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">{% if activity %}Update{% else %}Create{% endif %} Maintenance Plan</h5>
+                    <p class="mb-0 small">Morning planning entry - specify the maintenance work to be done</p>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.date.id_for_label }}" class="form-label">Date</label>
+                                    {{ form.date.errors }}
+                                    {{ form.date|add_class:"form-control" }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="alert alert-info mb-0">
+                                    <small><i class="bi bi-info-circle"></i> Maintenance activities are scheduled during General Shift</small>
+                                </div>
+                                <!-- Hidden shift field -->
+                                {{ form.shift }}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="{{ form.maintenance_type.id_for_label }}" class="form-label">Maintenance Type</label>
+                                    {{ form.maintenance_type.errors }}
+                                    {{ form.maintenance_type|add_class:"form-control" }}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="{{ form.maintenance_category.id_for_label }}" class="form-label">Category</label>
+                                    {{ form.maintenance_category.errors }}
+                                    {{ form.maintenance_category|add_class:"form-control" }}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="{{ form.area.id_for_label }}" class="form-label">Area</label>
+                                    {{ form.area.errors }}
+                                    {{ form.area|add_class:"form-control" }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.equipment.id_for_label }}" class="form-label">Equipment</label>
+                                    {{ form.equipment.errors }}
+                                    {{ form.equipment|add_class:"form-control" }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.equipment_id.id_for_label }}" class="form-label">Equipment ID/Tag</label>
+                                    {{ form.equipment_id.errors }}
+                                    {{ form.equipment_id|add_class:"form-control" }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label for="{{ form.activity_description.id_for_label }}" class="form-label">Activity Description</label>
+                                    {{ form.activity_description.errors }}
+                                    {{ form.activity_description|add_class:"form-control" }}
+                                    <div class="form-text">Describe the planned maintenance activity in detail</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label for="{{ form.spares_required.id_for_label }}" class="form-label">Spares Required</label>
+                                    {{ form.spares_required.errors }}
+                                    {{ form.spares_required|add_class:"form-control" }}
+                                    <div class="form-text">List all spare parts required for this maintenance activity</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="{{ form.start_time.id_for_label }}" class="form-label">Planned Start Time</label>
+                                    {{ form.start_time.errors }}
+                                    {{ form.start_time|add_class:"form-control" }}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="{{ form.end_time.id_for_label }}" class="form-label">Planned End Time</label>
+                                    {{ form.end_time.errors }}
+                                    {{ form.end_time|add_class:"form-control" }}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="{{ form.priority.id_for_label }}" class="form-label">Priority</label>
+                                    {{ form.priority.errors }}
+                                    {{ form.priority|add_class:"form-control" }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label for="{{ form.remarks.id_for_label }}" class="form-label">Remarks</label>
+                                    {{ form.remarks.errors }}
+                                    {{ form.remarks|add_class:"form-control" }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <a href="{% url 'maintenance:list' %}" class="btn btn-secondary me-md-2">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Save Plan</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
